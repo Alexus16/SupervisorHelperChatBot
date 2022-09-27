@@ -303,9 +303,6 @@ isDayReopened = False
 thread = Thread(target=threadFunc)
 thread.start()
 
-bot.infinity_polling()
-
-
 # ------------------Handlers--------------------- #
 
 @bot.message_handler(chat_types=['supergroup', 'group', 'gigagroup'])
@@ -336,3 +333,5 @@ def filter(pollAnswer):
 @bot.poll_answer_handler(filter)
 def processPollAnswer(pollAnswer: t.PollAnswer):
     dayStatCollector.ProcessPollAnswer(pollAnswer)
+
+bot.infinity_polling()
