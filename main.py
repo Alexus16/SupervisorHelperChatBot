@@ -8,6 +8,7 @@ import random
 from threading import Thread
 import os
 
+DATA_PATH = '/var/MireaChatBotData/'
 
 def getGroupDataDictionary(_chat_id: int = 0, _admin_id: int = 0, _supervisor_id: int = 0) -> dict:
     res = dict()
@@ -18,15 +19,15 @@ def getGroupDataDictionary(_chat_id: int = 0, _admin_id: int = 0, _supervisor_id
 
 
 def loadPresetSettings():
-    if os.path.exists('credentials.json'):
-        credentialsFile = open('credentials.json', 'r')
+    if os.path.exists(DATA_PATH + 'credentials.json'):
+        credentialsFile = open(DATA_PATH + 'credentials.json', 'r')
         credentialsData = json.load(credentialsFile)
         global token
         token = credentialsData['token']
         credentialsFile.close()
-    if os.path.exists('group_data.json'):
+    if os.path.exists(DATA_PATH + 'group_data.json'):
         global groupInfo
-        groupDataFile = open('group_data.json', 'r')
+        groupDataFile = open(DATA_PATH + 'group_data.json', 'r')
         groupData = json.load(groupDataFile)
         if isinstance(groupData['chat_id'], int) and groupData['chat_id'] != 0:
             groupInfo.ChatId = groupData['chat_id']
