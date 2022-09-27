@@ -60,7 +60,7 @@ class GroupInfo(object):
 
 
 groupInfo = GroupInfo(30)
-groupInfo.LessonAmount = [[2, 2, 3, 3, 3, 2, 0], [2, 2, 2, 3, 3, 2, 0]]
+groupInfo.LessonAmount = [[2, 2, 2, 3, 3, 2, 0], [2, 2, 3, 3, 3, 2, 0]]
 
 
 class StudentStatusAtLesson(enum.Enum):
