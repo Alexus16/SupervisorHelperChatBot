@@ -95,7 +95,8 @@ class DataRecorder(object):
         return None
 
     def deleteData(self):
-        os.remove(self.path)
+        if os.path.exists(self.path):
+            os.remove(self.path)
 
 
 class DayStatisticCollector(object):
