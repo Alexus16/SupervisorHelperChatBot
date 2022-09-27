@@ -8,6 +8,8 @@ import random
 from threading import Thread
 import os
 
+DATA_PATH = '/var/MireaChatBotData/'
+
 
 def getGroupDataDictionary(_chat_id: int = 0, _admin_id: int = 0, _supervisor_id: int = 0) -> dict:
     res = dict()
@@ -18,15 +20,15 @@ def getGroupDataDictionary(_chat_id: int = 0, _admin_id: int = 0, _supervisor_id
 
 
 def loadPresetSettings():
-    if os.path.exists('credentials.json'):
-        credentialsFile = open('credentials.json', 'r')
+    if os.path.exists(DATA_PATH + 'credentials.json'):
+        credentialsFile = open(DATA_PATH + 'credentials.json', 'r')
         credentialsData = json.load(credentialsFile)
         global token
         token = credentialsData['token']
         credentialsFile.close()
-    if os.path.exists('group_data.json'):
+    if os.path.exists(DATA_PATH + 'group_data.json'):
         global groupInfo
-        groupDataFile = open('group_data.json', 'r')
+        groupDataFile = open(DATA_PATH + 'group_data.json', 'r')
         groupData = json.load(groupDataFile)
         if isinstance(groupData['chat_id'], int) and groupData['chat_id'] != 0:
             groupInfo.ChatId = groupData['chat_id']
@@ -38,7 +40,7 @@ def loadPresetSettings():
 
 
 def savePresetData(chat_id: int = 0, admin_id: int = 0, supervisor_id: int = 0):
-    groupDataFile = open('group_data.json', 'w+')
+    groupDataFile = open(DATA_PATH + 'group_data.json', 'w+')
     json.dump(getGroupDataDictionary(chat_id, admin_id, supervisor_id), groupDataFile)
 
 
@@ -80,18 +82,38 @@ class DayRecord(object):
         self.studentData = student
 
 
+class DataRecorder(object):
+    def __init__(self, _path):
+        self.path = _path
+
+    def saveData(self, data: dict):
+        json.dump(data, self.path)
+
+    def loadData(self) -> (dict, None):
+        if os.path.exists(self.path):
+            return json.load(self.path)
+        return None
+
+    def deleteData(self):
+        os.remove(self.path)
+
+
 class DayStatisticCollector(object):
     def __init__(self, botObj: telebot.TeleBot, groupObj: GroupInfo):
         self._bot = botObj
         self._groupInfo = groupObj
-        self._restrictedPhrases = ['куратор']
+        self._restrictedPhrases = ['куратор', 'BOT']
         self.SupervisorPassword = 'SpecialForDasha'
         self.AdministratorPassword = 'asdqwerty312'
         self._todayPoll = None
         self._todayStatistic = DayStatistic(self._groupInfo, 0, 0)
         self._todayPollMessage = None
         self.isPollingGranted = False
-
+        self.criticalDayDataRecorder = DataRecorder(DATA_PATH + 'day-data.json')
+        data = self.criticalDayDataRecorder.loadData()
+        if data is not None:
+            self._todayStatistic = data['stat']
+            self._todayPollMessage = data['poll_message']
     def checkOnCompulsoryParams(self) -> bool:
         if self._groupInfo.ChatId == 0: return False
         if self._groupInfo.SupervisorId == 0: return False
@@ -114,6 +136,12 @@ class DayStatisticCollector(object):
         print('Data about Students collected',
               list([self._groupInfo.Students[i].FullName for i in range(len(self._groupInfo.Students))]))
         self.isPollingGranted = True
+
+    def createParamDict(self) -> dict:
+        params = dict()
+        params['poll_message'] = self._todayPollMessage
+        params['stat'] = self._todayStatistic
+        return params
 
     def CheckOnAdminOrSupervisorRegister(self, message: t.Message):
         if message.text == self.SupervisorPassword:
@@ -153,6 +181,13 @@ class DayStatisticCollector(object):
                         iterator += 1
                 if hasMissed:
                     resultStatisticReportText += tempPart
+        f = open(DATA_PATH + 'Reports/'
+                 + (str(self._todayStatistic.date)
+                    if isinstance(self._todayStatistic.date, datetime.date)
+                    else '-1')
+                 + '.txt', 'w+')
+        f.write(resultStatisticReportText)
+        f.close()
         return resultStatisticReportText
 
     def CloseDayAndDeletePoll(self):
@@ -161,6 +196,7 @@ class DayStatisticCollector(object):
         if isinstance(self._todayPollMessage, t.Message):
             if not self._bot.delete_message(self._groupInfo.ChatId, self._todayPollMessage.message_id): print(
                 'Failed to delete poll message')
+        self.criticalDayDataRecorder.deleteData()
 
     def OpenDayAndSendNewPoll(self):
         if not self.checkOnCompulsoryParams(): return
@@ -174,6 +210,7 @@ class DayStatisticCollector(object):
                                                      ['Пара ' + str(i + 1) for i in range(lessonLen)],
                                                      is_anonymous=False, allows_multiple_answers=True)
         self._bot.pin_chat_message(self._groupInfo.ChatId, self._todayPollMessage.message_id, True)
+        self.criticalDayDataRecorder.saveData(self.createParamDict())
 
     def ProcessPollAnswer(self, pollAnswer: t.PollAnswer):
         if not self.checkOnCompulsoryParams(): return
@@ -246,6 +283,7 @@ def threadFunc():
             isDayReopened = False
         time.sleep(10)
 
+
 token = ''
 loadPresetSettings()
 bot = telebot.TeleBot(token)
@@ -265,8 +303,8 @@ isDayReopened = False
 thread = Thread(target=threadFunc)
 thread.start()
 
-
 bot.infinity_polling()
+
 
 # ------------------Handlers--------------------- #
 
@@ -298,4 +336,3 @@ def filter(pollAnswer):
 @bot.poll_answer_handler(filter)
 def processPollAnswer(pollAnswer: t.PollAnswer):
     dayStatCollector.ProcessPollAnswer(pollAnswer)
-
