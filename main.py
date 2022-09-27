@@ -8,7 +8,6 @@ import random
 from threading import Thread
 import os
 
-DATA_PATH = '/var/MireaChatBotData/'
 
 def getGroupDataDictionary(_chat_id: int = 0, _admin_id: int = 0, _supervisor_id: int = 0) -> dict:
     res = dict()
@@ -19,15 +18,15 @@ def getGroupDataDictionary(_chat_id: int = 0, _admin_id: int = 0, _supervisor_id
 
 
 def loadPresetSettings():
-    if os.path.exists(DATA_PATH + 'credentials.json'):
-        credentialsFile = open(DATA_PATH + 'credentials.json', 'r')
+    if os.path.exists('credentials.json'):
+        credentialsFile = open('credentials.json', 'r')
         credentialsData = json.load(credentialsFile)
         global token
         token = credentialsData['token']
         credentialsFile.close()
-    if os.path.exists(DATA_PATH + 'group_data.json'):
+    if os.path.exists('group_data.json'):
         global groupInfo
-        groupDataFile = open(DATA_PATH + 'group_data.json', 'r')
+        groupDataFile = open('group_data.json', 'r')
         groupData = json.load(groupDataFile)
         if isinstance(groupData['chat_id'], int) and groupData['chat_id'] != 0:
             groupInfo.ChatId = groupData['chat_id']
@@ -226,22 +225,7 @@ class DayStatistic(object):
                 return rec
 
 
-# ------------------------------------------------------------------ #
-token = ''
-loadPresetSettings()
-bot = telebot.TeleBot(token)
-dayStatCollector = DayStatisticCollector(bot, groupInfo)
-print('Current week:', getWeekNumber())
-if groupInfo.ChatId == 0:
-    registerChatPassphrase = ''
-    for ch in [chr(ord('a') + random.randint(0, 25)) for i in range(10)]:
-        registerChatPassphrase += ch
-    print('Passphrase to register chat:', registerChatPassphrase)
-else:
-    print('Preset Chat loaded')
-    dayStatCollector.CollectDataAboutStudents()
-
-isDayReopened = False
+# --------------------------Main------------------------------------ #
 
 
 def threadFunc():
@@ -262,10 +246,29 @@ def threadFunc():
             isDayReopened = False
         time.sleep(10)
 
+token = ''
+loadPresetSettings()
+bot = telebot.TeleBot(token)
+dayStatCollector = DayStatisticCollector(bot, groupInfo)
+print('Current week:', getWeekNumber())
+if groupInfo.ChatId == 0:
+    registerChatPassphrase = ''
+    for ch in [chr(ord('a') + random.randint(0, 25)) for i in range(10)]:
+        registerChatPassphrase += ch
+    print('Passphrase to register chat:', registerChatPassphrase)
+else:
+    print('Preset Chat loaded')
+    dayStatCollector.CollectDataAboutStudents()
+
+isDayReopened = False
 
 thread = Thread(target=threadFunc)
 thread.start()
 
+
+bot.infinity_polling()
+
+# ------------------Handlers--------------------- #
 
 @bot.message_handler(chat_types=['supergroup', 'group', 'gigagroup'])
 def processMessageGroupChat(message: t.Message):
@@ -296,5 +299,3 @@ def filter(pollAnswer):
 def processPollAnswer(pollAnswer: t.PollAnswer):
     dayStatCollector.ProcessPollAnswer(pollAnswer)
 
-
-bot.infinity_polling()
