@@ -242,7 +242,7 @@ class DayStatisticCollector(object):
     def CloseDayAndDeletePoll(self):
         if not self.checkOnCompulsoryParams(): return
         self.SendStatisticToSupervisor()
-        if isinstance(self._todayPollMessageId, int):
+        if isinstance(self._todayPollMessageId, int) and self._todayPollMessageId != 0:
             if not self._bot.delete_message(self._groupInfo.ChatId, self._todayPollMessageId): print(
                 'Failed to delete poll message')
         self.criticalDayDataRecorder.deleteData()
