@@ -135,11 +135,16 @@ class DataRecorder(object):
         self.path = _path
 
     def saveData(self, data: dict):
-        json.dump(data, open(self.path, 'w+'))
+        f = open(self.path, 'w+')
+        json.dump(data, f)
+        f.close()
 
     def loadData(self) -> (dict, None):
         if os.path.exists(self.path):
-            return json.load(self.path)
+            f = open(self.path, 'r')
+            data = json.load(f)
+            f.close()
+            return data
         return None
 
     def deleteData(self):
