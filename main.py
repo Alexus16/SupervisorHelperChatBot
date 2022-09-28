@@ -234,7 +234,7 @@ class DayStatisticCollector(object):
                         iterator += 1
                 if hasMissed:
                     resultStatisticReportText += tempPart
-        f = open(DATA_PATH + 'reports/' + str(random.randint(1, 100000000)))
+        f = open(DATA_PATH + 'reports/' + str(random.randint(1, 100000000)), 'w+')
         f.write(resultStatisticReportText)
         f.close()
         return resultStatisticReportText
