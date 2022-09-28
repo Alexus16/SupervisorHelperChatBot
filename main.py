@@ -74,7 +74,8 @@ class StudentData(object):
         self.FullName = fullName
         self.internalId = 0
 
-    def createFromDict(cls, params: dict):
+    @staticmethod
+    def createFromDict(params: dict):
         res = StudentData(0, '')
         res.UserId = params['id']
         res.FullName = params['full_name']
@@ -93,7 +94,8 @@ class DayRecord(object):
         self.lessons = [StudentStatusAtLesson.Attended for i in range(n)]
         self.studentData = student
 
-    def createFromDict(cls, params: dict):
+    @staticmethod
+    def createFromDict(params: dict):
         res = DayRecord(None, 0)
         res.studentData = StudentData.createFromDict(params['student'])
         res.lessons = [StudentStatusAtLesson(params['lessons'][i]) for i in range(len(params['lessons']))]
@@ -112,7 +114,8 @@ class DayStatistic(object):
                         range(len(group.Students))]
         self.date = date
 
-    def createFromDict(cls, params: dict):
+    @staticmethod
+    def createFromDict(params: dict):
         res = DayStatistic(None, 0, 0, None)
         res.records = [DayRecord.createFromDict(params['records'][i]) for i in range(len(params['records']))]
         res.date = datetime.date.fromisoformat(params['date'])
