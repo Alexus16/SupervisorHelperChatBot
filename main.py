@@ -268,6 +268,7 @@ class DayStatisticCollector(object):
         dayRecord.lessons = [
             StudentStatusAtLesson.Attended if not i in pollAnswer.option_ids else StudentStatusAtLesson.Missed
             for i in range(len(dayRecord.lessons))]
+        self.criticalDayDataRecorder.saveData(self.getDayDataDict())
 
     def SendStatisticToSupervisor(self):
         if not self.checkOnCompulsoryParams(): return
