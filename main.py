@@ -74,10 +74,12 @@ class StudentData(object):
         self.FullName = fullName
         self.internalId = 0
 
-    def __init__(self, params: dict):
-        self.UserId = params['id']
-        self.FullName = params['full_name']
-        self.internalId = 0
+    def createFromDict(cls, params: dict):
+        res = StudentData(0, '')
+        res.UserId = params['id']
+        res.FullName = params['full_name']
+        res.internalId = 0
+        return res
 
     def getParamDict(self) -> dict:
         res = dict()
@@ -91,9 +93,11 @@ class DayRecord(object):
         self.lessons = [StudentStatusAtLesson.Attended for i in range(n)]
         self.studentData = student
 
-    def __init__(self, params: dict):
-        self.studentData = StudentData(params['student'])
-        self.lessons = [StudentStatusAtLesson(params['lessons'][i]) for i in range(len(params['lessons']))]
+    def createFromDict(cls, params: dict):
+        res = DayRecord(None, 0)
+        res.studentData = StudentData.createFromDict(params['student'])
+        res.lessons = [StudentStatusAtLesson(params['lessons'][i]) for i in range(len(params['lessons']))]
+        return res
 
     def getDataDict(self):
         res = dict()
@@ -107,9 +111,11 @@ class DayStatistic(object):
                         range(len(group.Students))]
         self.date = date
 
-    def __init__(self, params: dict):
-        self.records = [DayRecord(params['records'][i]) for i in range(len(params['records']))]
-        self.date = datetime.date.fromisoformat(params['date'])
+    def createFromDict(cls, params: dict):
+        res = DayStatistic(None, 0, 0, None)
+        res.records = [DayRecord.createFromDict(params['records'][i]) for i in range(len(params['records']))]
+        res.date = datetime.date.fromisoformat(params['date'])
+        return res
 
     def getDataDict(self) -> dict:
         res = dict()
@@ -188,7 +194,7 @@ class DayStatisticCollector(object):
 
     def setDayDataDict(self, data: dict):
         self._todayPollMessageId = data['poll_message_id']
-        self._todayStatistic = DayStatistic(data['stat'])
+        self._todayStatistic = DayStatistic.createFromDict(data['stat'])
 
     def CheckOnAdminOrSupervisorRegister(self, message: t.Message):
         if message.text == self.SupervisorPassword:
@@ -253,7 +259,7 @@ class DayStatisticCollector(object):
                                                        ['Пара ' + str(i + 1) for i in range(lessonLen)],
                                                        is_anonymous=False, allows_multiple_answers=True).message_id
         self._bot.pin_chat_message(self._groupInfo.ChatId, self._todayPollMessageId, True)
-        self.criticalDayDataRecorder.saveData(self.createParamDict())
+        self.criticalDayDataRecorder.saveData(self.getDayDataDict())
 
     def ProcessPollAnswer(self, pollAnswer: t.PollAnswer):
         if not self.checkOnCompulsoryParams(): return
