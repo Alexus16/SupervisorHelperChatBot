@@ -102,7 +102,7 @@ class DayRecord(object):
     def getDataDict(self):
         res = dict()
         res['student'] = self.studentData.getParamDict()
-        res['lessons'] = [self.lessons[i] for i in range(len(self.lessons))]
+        res['lessons'] = [int(self.lessons[i]) for i in range(len(self.lessons))]
         return res
 
 
