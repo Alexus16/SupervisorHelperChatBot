@@ -161,7 +161,7 @@ class DayStatisticCollector(object):
         self.criticalDayDataRecorder = DataRecorder(DATA_PATH + 'day-data.json')
         data = self.criticalDayDataRecorder.loadData()
         if data is not None:
-            self._todayStatistic = DayStatistic(data['stat'])
+            self._todayStatistic = DayStatistic.createFromDict(data['stat'])
             self._todayPollMessageId = data['mes_id']
 
     def checkOnCompulsoryParams(self) -> bool:
