@@ -134,7 +134,7 @@ class DataRecorder(object):
         self.path = _path
 
     def saveData(self, data: dict):
-        json.dump(data, self.path)
+        json.dump(data, open(self.path, 'w+'))
 
     def loadData(self) -> (dict, None):
         if os.path.exists(self.path):
