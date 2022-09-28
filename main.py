@@ -166,7 +166,7 @@ class DayStatisticCollector(object):
         self.criticalDayDataRecorder = DataRecorder(DATA_PATH + 'day-data.json')
         data = self.criticalDayDataRecorder.loadData()
         if data is not None:
-            self._todayStatistic = DayStatistic(data['stat'])
+            self._todayStatistic = DayStatistic.createFromDict(data['stat'])
             self._todayPollMessageId = data['mes_id']
 
     def checkOnCompulsoryParams(self) -> bool:
@@ -273,6 +273,7 @@ class DayStatisticCollector(object):
         dayRecord.lessons = [
             StudentStatusAtLesson.Attended if not i in pollAnswer.option_ids else StudentStatusAtLesson.Missed
             for i in range(len(dayRecord.lessons))]
+        self.criticalDayDataRecorder.saveData(self.getDayDataDict())
 
     def SendStatisticToSupervisor(self):
         if not self.checkOnCompulsoryParams(): return
