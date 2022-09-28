@@ -110,8 +110,9 @@ class DayRecord(object):
 
 class DayStatistic(object):
     def __init__(self, group: GroupInfo, weekNumber: int, weekDay: int, date: datetime.date = None):
-        self.records = [DayRecord(group.Students[i], group.LessonAmount[weekNumber % 2][weekDay]) for i in
-                        range(len(group.Students))]
+        if group is not None:
+            self.records = [DayRecord(group.Students[i], group.LessonAmount[weekNumber % 2][weekDay]) for i in
+                            range(len(group.Students))]
         self.date = date
 
     @staticmethod
@@ -170,7 +171,7 @@ class DayStatisticCollector(object):
         data = self.criticalDayDataRecorder.loadData()
         if data is not None:
             self._todayStatistic = DayStatistic.createFromDict(data['stat'])
-            self._todayPollMessageId = data['mes_id']
+            self._todayPollMessageId = data['poll_message_id']
 
     def checkOnCompulsoryParams(self) -> bool:
         if self._groupInfo.ChatId == 0: return False
@@ -243,14 +244,14 @@ class DayStatisticCollector(object):
                         iterator += 1
                 if hasMissed:
                     resultStatisticReportText += tempPart
-        f = open(DATA_PATH + 'reports/' + str(random.randint(1, 100000000)), 'w+')
-        f.write(resultStatisticReportText)
-        f.close()
         return resultStatisticReportText
 
     def CloseDayAndDeletePoll(self):
         if not self.checkOnCompulsoryParams(): return
         self.SendStatisticToSupervisor()
+        f = open(DATA_PATH + 'reports/' + str(random.randint(1, 100000000)), 'w+')
+        f.write(self.GenerateDayStatisticReport())
+        f.close()
         if isinstance(self._todayPollMessageId, int) and self._todayPollMessageId != 0:
             if not self._bot.delete_message(self._groupInfo.ChatId, self._todayPollMessageId): print(
                 'Failed to delete poll message')
