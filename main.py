@@ -252,9 +252,12 @@ class DayStatisticCollector(object):
         f = open(DATA_PATH + 'reports/' + str(random.randint(1, 100000000)), 'w+')
         f.write(self.GenerateDayStatisticReport())
         f.close()
-        if isinstance(self._todayPollMessageId, int) and self._todayPollMessageId != 0:
-            if not self._bot.delete_message(self._groupInfo.ChatId, self._todayPollMessageId): print(
-                'Failed to delete poll message')
+        if self._todayPollMessageId is int and self._todayPollMessageId != 0:
+            try:
+                if not self._bot.delete_message(self._groupInfo.ChatId, self._todayPollMessageId): print(
+                    'Failed to delete poll message')
+            except:
+                print('Failed to delete poll message')
         self.criticalDayDataRecorder.deleteData()
 
     def OpenDayAndSendNewPoll(self):
@@ -319,7 +322,7 @@ def threadFunc():
         if not dayStatCollector.checkOnCompulsoryParams() and not dayStatCollector.isPollingGranted:
             continue
         nowHour = datetime.datetime.now().hour.real
-        if nowHour == 19 and not isDayReopened:
+        if nowHour == 17 and not isDayReopened:
             print('Procedure of closing day started')
             dayStatCollector.CloseDayAndDeletePoll()
             print('Procedure of closing day compete')
@@ -327,7 +330,7 @@ def threadFunc():
             dayStatCollector.OpenDayAndSendNewPoll()
             print('Procedure of opening day complete')
             isDayReopened = True
-        if nowHour == 20 and isDayReopened:
+        if nowHour == 18 and isDayReopened:
             isDayReopened = False
         time.sleep(10)
 
